@@ -186,7 +186,16 @@ class GitHubService:
                 pr["_reviewed"] = comment_info["ai_reviewed"]
                 pr["_ignored"] = comment_info["ignored"]
                 details = await self.get_review_details(repo, pr["number"])
-                pr["_reviewers"] = details["reviewers"]
+                # Merge requested reviewers (pending) with those who already reviewed
+                requested = [
+                    u["login"]
+                    for u in pr.get("requested_reviewers", [])
+                    if u.get("login")
+                ]
+                all_reviewers = list(
+                    dict.fromkeys(details["reviewers"] + requested)
+                )
+                pr["_reviewers"] = all_reviewers
                 pr["_approved_by"] = details["approved_by"]
                 return pr
 
