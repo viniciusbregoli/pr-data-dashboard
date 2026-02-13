@@ -2,6 +2,8 @@
 
 Dashboard for tracking AI code review compliance and approval goals across GitHub repositories.
 
+![Dashboard](dashboard.png)
+
 ## Prerequisites
 
 - Python 3.11+
