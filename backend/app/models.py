@@ -15,6 +15,7 @@ class PRInfo(BaseModel):
     human_review: str  # "waiting", "approved", "none"
     reviewers: list[str]
     approved_by: list[str]
+    changes_requested_by: list[str]
     approval_count: int
 
 

@@ -169,9 +169,11 @@ class GitHubService:
             page += 1
 
         approved_by = [u for u, s in latest_state.items() if s == "APPROVED"]
+        changes_requested_by = [u for u, s in latest_state.items() if s == "CHANGES_REQUESTED"]
         result = {
             "reviewers": list(reviewers.keys()),
             "approved_by": approved_by,
+            "changes_requested_by": changes_requested_by,
         }
         _reviewers_cache[cache_key] = result
         return result
@@ -184,7 +186,8 @@ class GitHubService:
             async with sem:
                 comment_info = await self.check_pr_comments(repo, pr["number"])
                 pr["_reviewed"] = comment_info["ai_reviewed"]
-                pr["_ignored"] = comment_info["ignored"]
+                labels = [l["name"].lower() for l in pr.get("labels", [])]
+                pr["_ignored"] = comment_info["ignored"] or "ignore-review" in labels
                 details = await self.get_review_details(repo, pr["number"])
                 # Merge requested reviewers (pending) with those who already reviewed
                 requested = [
@@ -197,6 +200,7 @@ class GitHubService:
                 )
                 pr["_reviewers"] = all_reviewers
                 pr["_approved_by"] = details["approved_by"]
+                pr["_changes_requested_by"] = details["changes_requested_by"]
                 return pr
 
         return await asyncio.gather(*[check(pr) for pr in prs])

@@ -69,7 +69,12 @@ export function Dashboard() {
       {error && <div className="error-banner">Error: {error}</div>}
 
       {loading ? (
-        <div className="loading">Loading PRs...</div>
+        <div className="loading">
+          <div className="progress-bar">
+            <div className="progress-bar-indeterminate" />
+          </div>
+          <p>Loading PRs...</p>
+        </div>
       ) : data ? (
         <>
           <StatsBar prs={data.prs} />

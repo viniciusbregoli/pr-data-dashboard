@@ -92,6 +92,7 @@ async def list_prs(
                     human_review=_get_human_review(pr),
                     reviewers=pr["_reviewers"],
                     approved_by=pr["_approved_by"],
+                    changes_requested_by=pr.get("_changes_requested_by", []),
                     approval_count=len(pr["_approved_by"]),
                 )
             )

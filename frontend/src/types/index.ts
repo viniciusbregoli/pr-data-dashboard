@@ -10,6 +10,7 @@ export interface PRInfo {
   human_review: 'waiting' | 'approved' | 'none'
   reviewers: string[]
   approved_by: string[]
+  changes_requested_by: string[]
   approval_count: number
 }
 
