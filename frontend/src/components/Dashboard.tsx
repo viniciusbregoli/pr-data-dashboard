@@ -6,6 +6,7 @@ import { DateFilter } from './DateFilter'
 import { PRTable } from './PRTable'
 import { RepoFilter } from './RepoFilter'
 import { StatsBar } from './StatsBar'
+import { ReviewerFilter } from './ReviewerFilter'
 import { StatusFilter } from './StatusFilter'
 
 function defaultSince() {
@@ -24,6 +25,7 @@ export function Dashboard() {
   const [repo, setRepo] = useState('')
   const [author, setAuthor] = useState('')
   const [status, setStatus] = useState('')
+  const [reviewer, setReviewer] = useState('')
   const [showIgnored, setShowIgnored] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [repos, setRepos] = useState<string[]>([])
@@ -57,6 +59,11 @@ export function Dashboard() {
         <DateFilter since={since} until={until} onChange={(s, u) => { setSince(s); setUntil(u) }} />
         <RepoFilter repos={repos} value={repo} onChange={setRepo} />
         <AuthorFilter authors={authors} value={author} onChange={setAuthor} />
+        <ReviewerFilter
+          reviewers={data ? [...new Set(data.prs.flatMap((pr) => pr.reviewers))].sort() : []}
+          value={reviewer}
+          onChange={setReviewer}
+        />
         <StatusFilter value={status} onChange={setStatus} />
         <div className="filter-group">
           <label className="toggle-label">
@@ -77,8 +84,17 @@ export function Dashboard() {
         </div>
       ) : data ? (
         <>
-          <StatsBar prs={data.prs} />
-          <PRTable prs={data.prs} />
+          {(() => {
+            const filtered = reviewer
+              ? data.prs.filter((pr) => pr.reviewers.includes(reviewer))
+              : data.prs
+            return (
+              <>
+                <StatsBar prs={filtered} />
+                <PRTable prs={filtered} />
+              </>
+            )
+          })()}
         </>
       ) : null}
     </div>
