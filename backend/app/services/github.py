@@ -189,6 +189,8 @@ class GitHubService:
                 labels = [l["name"].lower() for l in pr.get("labels", [])]
                 pr["_ignored"] = comment_info["ignored"] or "ignore-review" in labels
                 details = await self.get_review_details(repo, pr["number"])
+                author_login = pr.get("user", {}).get("login", "")
+                author_lower = author_login.lower()
                 # Merge requested reviewers (pending) with those who already reviewed
                 requested = [
                     u["login"]
@@ -198,9 +200,17 @@ class GitHubService:
                 all_reviewers = list(
                     dict.fromkeys(details["reviewers"] + requested)
                 )
+                if author_lower:
+                    all_reviewers = [u for u in all_reviewers if u.lower() != author_lower]
                 pr["_reviewers"] = all_reviewers
-                pr["_approved_by"] = details["approved_by"]
-                pr["_changes_requested_by"] = details["changes_requested_by"]
+                pr["_approved_by"] = [
+                    u for u in details["approved_by"] if u.lower() != author_lower
+                ]
+                pr["_changes_requested_by"] = [
+                    u
+                    for u in details["changes_requested_by"]
+                    if u.lower() != author_lower
+                ]
                 return pr
 
         return await asyncio.gather(*[check(pr) for pr in prs])

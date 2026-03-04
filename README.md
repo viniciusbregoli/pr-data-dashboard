@@ -49,65 +49,27 @@ Edit `config.json` in the project root with the repos you want to track:
 }
 ```
 
-Use the `owner/repo` format (e.g. `facebook/react`).
-
 ## Running
 
-### Backend
+### Docker Compose (Frontend + Backend)
 
-```bash
-cd backend
-uv sync
-uv run uvicorn app.main:app --reload
+Make sure `backend/.env` has your GitHub token:
+
+```
+GITHUB_TOKEN=ghp_your_token_here
 ```
 
-The API will be available at `http://localhost:8000`.
-
-### Frontend
+Then run everything with one command from the project root:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose up --build
 ```
 
-The dashboard will be available at `http://localhost:5173`.
+App URLs:
 
-## Features
+- Frontend: `http://localhost:5173`
 
-### Dashboard Stats
-
-- **Total PRs**: Count of all PRs in the selected date range
-- **AI Reviewed / Not Reviewed**: How many PRs received an AI code review
-- **2+ Approvals**: How many PRs have been approved by at least 2 reviewers
-- Two progress bars tracking AI review % and 2+ approvals %
-
-### Table Columns
-
-- **Repo**: Repository name
-- **Title**: PR number and title (links to GitHub)
-- **Author**: PR author
-- **Reviewers**: Displayed as badges — green if the reviewer approved, red if not
-- **Approvals**: Count of unique approvals out of 2 (e.g. `0 / 2`, `1 / 2`, `2 / 2`), color-coded (grey/yellow/green)
-- **Date**: Creation date (dd/mm/yyyy)
-- **PR Status**: Open (green), Merged (purple), Closed (red)
-- **AI Review**: Whether the AI review bot commented
-- **Human Review**: Based on PR labels — `wait-review` (yellow), `approved` (green), or "No Label" (grey)
-
-All columns are sortable by clicking the header.
-
-### Filters
-
-- **Date range**: Filter PRs by creation date (defaults to last 7 days)
-- **Repository**: Filter by a specific repo from your configured list
-- **Author**: Filter by PR author
-- **Status**: Filter by PR status (Open, Merged, Closed)
-- **Show ignored**: Toggle to include PRs marked with `#ignore-tracker`
-
-### Cache
-
-- API responses are cached for 5 minutes to reduce GitHub API calls
-- Click the **Clear Cache** button in the top-right corner to force a fresh fetch from GitHub
+The backend API is available internally to the frontend at `http://backend:8000`.
 
 ## How it works
 
