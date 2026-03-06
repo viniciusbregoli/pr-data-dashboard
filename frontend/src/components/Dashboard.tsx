@@ -19,7 +19,11 @@ function defaultUntil() {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function Dashboard() {
+interface Props {
+  onResetToken: () => void
+}
+
+export function Dashboard({ onResetToken }: Props) {
   const [since, setSince] = useState(defaultSince)
   const [until, setUntil] = useState(defaultUntil)
   const [repo, setRepo] = useState('')
@@ -50,9 +54,14 @@ export function Dashboard() {
     <div className="dashboard">
       <header className="dashboard-header">
         <h1>PR Review Tracker</h1>
-        <button className="btn-clear-cache" onClick={handleClearCache} disabled={loading}>
-          Clear Cache
-        </button>
+        <div className="header-actions">
+          <button className="btn-secondary" onClick={onResetToken} disabled={loading}>
+            Change GitHub Token
+          </button>
+          <button className="btn-clear-cache" onClick={handleClearCache} disabled={loading}>
+            Clear Cache
+          </button>
+        </div>
       </header>
 
       <div className="filters">

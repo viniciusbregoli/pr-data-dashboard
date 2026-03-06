@@ -1,20 +1,36 @@
 import asyncio
+import hashlib
 import logging
 import time
 from datetime import datetime
 
 import httpx
 from cachetools import TTLCache
+from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
 # Cache review status: (repo, pr_number) -> bool, 5 min TTL
 _review_cache: TTLCache = TTLCache(maxsize=4096, ttl=300)
 _reviewers_cache: TTLCache = TTLCache(maxsize=4096, ttl=300)
+_repo_access_cache: TTLCache = TTLCache(maxsize=4096, ttl=300)
+
+
+def _clear_cache_for_token(cache: TTLCache, token_key: str):
+    for key in list(cache.keys()):
+        if isinstance(key, tuple) and key and key[0] == token_key:
+            cache.pop(key, None)
+
+
+def clear_github_caches(token_key: str):
+    _clear_cache_for_token(_review_cache, token_key)
+    _clear_cache_for_token(_reviewers_cache, token_key)
+    _clear_cache_for_token(_repo_access_cache, token_key)
 
 
 class GitHubService:
     def __init__(self, token: str, base_url: str = "https://api.github.com"):
+        self.token_key = hashlib.sha256(token.encode()).hexdigest()
         self.client = httpx.AsyncClient(
             base_url=base_url,
             headers={
@@ -26,6 +42,36 @@ class GitHubService:
 
     async def close(self):
         await self.client.aclose()
+
+    @staticmethod
+    def _raise_for_status(response: httpx.Response):
+        if response.status_code == 401:
+            raise HTTPException(status_code=401, detail="Invalid or expired GitHub token.")
+        response.raise_for_status()
+
+    async def can_access_repo(self, repo: str) -> bool:
+        cache_key = (self.token_key, repo)
+        if cache_key in _repo_access_cache:
+            return _repo_access_cache[cache_key]
+
+        resp = await self.client.get(f"/repos/{repo}")
+        await self._check_rate_limit(resp)
+        if resp.status_code in (403, 404):
+            _repo_access_cache[cache_key] = False
+            return False
+        self._raise_for_status(resp)
+        _repo_access_cache[cache_key] = True
+        return True
+
+    async def get_accessible_repos(self, repos: list[str]) -> list[str]:
+        sem = asyncio.Semaphore(10)
+
+        async def check(repo: str) -> str | None:
+            async with sem:
+                return repo if await self.can_access_repo(repo) else None
+
+        accessible = await asyncio.gather(*[check(repo) for repo in repos])
+        return [repo for repo in accessible if repo]
 
     async def get_prs(
         self,
@@ -65,7 +111,7 @@ class GitHubService:
             params["page"] = page
             resp = await self.client.get(url, params=params)
             await self._check_rate_limit(resp)
-            resp.raise_for_status()
+            self._raise_for_status(resp)
             data = resp.json()
 
             if not data:
@@ -93,7 +139,7 @@ class GitHubService:
 
         Returns {"ai_reviewed": bool, "ignored": bool}.
         """
-        cache_key = (repo, pr_number)
+        cache_key = (self.token_key, repo, pr_number)
         if cache_key in _review_cache:
             return _review_cache[cache_key]
 
@@ -107,7 +153,7 @@ class GitHubService:
             params["page"] = page
             resp = await self.client.get(url, params=params)
             await self._check_rate_limit(resp)
-            resp.raise_for_status()
+            self._raise_for_status(resp)
             comments = resp.json()
 
             if not comments:
@@ -135,7 +181,7 @@ class GitHubService:
         Returns {"reviewers": [...], "approved_by": [...]}.
         A reviewer's latest review state determines if they count as an approver.
         """
-        cache_key = (repo, pr_number)
+        cache_key = (self.token_key, repo, pr_number)
         if cache_key in _reviewers_cache:
             return _reviewers_cache[cache_key]
 
@@ -150,7 +196,7 @@ class GitHubService:
             params["page"] = page
             resp = await self.client.get(url, params=params)
             await self._check_rate_limit(resp)
-            resp.raise_for_status()
+            self._raise_for_status(resp)
             reviews = resp.json()
 
             if not reviews:
@@ -197,6 +243,7 @@ class GitHubService:
                     for u in pr.get("requested_reviewers", [])
                     if u.get("login")
                 ]
+                requested_lower = {u.lower() for u in requested}
                 all_reviewers = list(
                     dict.fromkeys(details["reviewers"] + requested)
                 )
@@ -204,12 +251,14 @@ class GitHubService:
                     all_reviewers = [u for u in all_reviewers if u.lower() != author_lower]
                 pr["_reviewers"] = all_reviewers
                 pr["_approved_by"] = [
-                    u for u in details["approved_by"] if u.lower() != author_lower
+                    u
+                    for u in details["approved_by"]
+                    if u.lower() != author_lower and u.lower() not in requested_lower
                 ]
                 pr["_changes_requested_by"] = [
                     u
                     for u in details["changes_requested_by"]
-                    if u.lower() != author_lower
+                    if u.lower() != author_lower and u.lower() not in requested_lower
                 ]
                 return pr
 

@@ -5,18 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import prs, repos
-from app.services.github import GitHubService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.github = GitHubService(
-        token=settings.github_token,
-        base_url=settings.github_api_base,
-    )
     app.state.repos = settings.get_repos()
     yield
-    await app.state.github.close()
 
 
 app = FastAPI(title="PR Review Tracker", lifespan=lifespan)

@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
 from cachetools import TTLCache
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 
+from app.dependencies import get_github_service, get_token_key
 from app.models import AuthorListResponse, PRInfo, PRListResponse, PRStats
+from app.services.github import GitHubService, clear_github_caches
 
 router = APIRouter()
 
@@ -12,17 +14,23 @@ _prs_cache: TTLCache = TTLCache(maxsize=256, ttl=300)
 _authors_cache: TTLCache = TTLCache(maxsize=64, ttl=300)
 
 
+def _clear_token_cache(cache: TTLCache, token_key: str):
+    for key in list(cache.keys()):
+        if isinstance(key, tuple) and key and key[0] == token_key:
+            cache.pop(key, None)
+
+
 @router.post("/cache/clear")
-async def clear_cache(request: Request):
-    from app.services.github import _review_cache, _reviewers_cache
-    _prs_cache.clear()
-    _authors_cache.clear()
-    _review_cache.clear()
-    _reviewers_cache.clear()
+async def clear_cache(token_key: str = Depends(get_token_key)):
+    _clear_token_cache(_prs_cache, token_key)
+    _clear_token_cache(_authors_cache, token_key)
+    clear_github_caches(token_key)
     return {"status": "ok"}
 
 
 def _get_human_review(pr: dict) -> str:
+    if pr.get("_changes_requested_by"):
+        return "changes_requested"
     labels = [l["name"].lower() for l in pr.get("labels", [])]
     if "approved" in labels:
         return "approved"
@@ -50,6 +58,8 @@ def _default_until() -> str:
 @router.get("/prs", response_model=PRListResponse)
 async def list_prs(
     request: Request,
+    github: GitHubService = Depends(get_github_service),
+    token_key: str = Depends(get_token_key),
     since: str = Query(default_factory=_default_since),
     until: str = Query(default_factory=_default_until),
     repo: str | None = Query(default=None),
@@ -57,17 +67,16 @@ async def list_prs(
     status: str | None = Query(default=None),
     show_ignored: bool = Query(default=False),
 ):
-    cache_key = (since, until, repo, author, status, show_ignored)
+    cache_key = (token_key, since, until, repo, author, status, show_ignored)
     if cache_key in _prs_cache:
         return _prs_cache[cache_key]
 
-    github = request.app.state.github
-    repos = request.app.state.repos
+    repos = await github.get_accessible_repos(request.app.state.repos)
 
     since_dt = datetime.strptime(since, "%Y-%m-%d")
     until_dt = datetime.strptime(until, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
 
-    target_repos = [repo] if repo and repo in repos else repos
+    target_repos = [repo] if repo and repo in repos else ([] if repo else repos)
 
     all_prs: list[PRInfo] = []
     for r in target_repos:
@@ -121,18 +130,19 @@ async def list_prs(
 @router.get("/authors", response_model=AuthorListResponse)
 async def list_authors(
     request: Request,
+    github: GitHubService = Depends(get_github_service),
+    token_key: str = Depends(get_token_key),
     since: str = Query(default_factory=_default_since),
     until: str = Query(default_factory=_default_until),
 ):
-    github = request.app.state.github
-    repos = request.app.state.repos
+    cache_key = (token_key, since, until)
+    if cache_key in _authors_cache:
+        return _authors_cache[cache_key]
+
+    repos = await github.get_accessible_repos(request.app.state.repos)
 
     since_dt = datetime.strptime(since, "%Y-%m-%d")
     until_dt = datetime.strptime(until, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
-
-    cache_key = (since, until)
-    if cache_key in _authors_cache:
-        return _authors_cache[cache_key]
 
     authors = await github.get_authors(repos, since_dt, until_dt)
     result = AuthorListResponse(authors=authors)
