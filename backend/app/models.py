@@ -12,7 +12,7 @@ class PRInfo(BaseModel):
     url: str
     status: str  # "open", "merged", "closed"
     reviewed: bool
-    human_review: str  # "waiting", "approved", "none"
+    human_review: str  # "changes_requested", "waiting", "approved", "none"
     reviewers: list[str]
     approved_by: list[str]
     changes_requested_by: list[str]

@@ -7,7 +7,7 @@ export interface PRInfo {
   url: string
   status: 'open' | 'merged' | 'closed'
   reviewed: boolean
-  human_review: 'waiting' | 'approved' | 'none'
+  human_review: 'changes_requested' | 'waiting' | 'approved' | 'none'
   reviewers: string[]
   approved_by: string[]
   changes_requested_by: string[]

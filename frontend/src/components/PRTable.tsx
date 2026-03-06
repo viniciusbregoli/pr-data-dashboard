@@ -4,6 +4,12 @@ import type { PRInfo } from '../types'
 type SortKey = 'repo' | 'title' | 'author' | 'created_at' | 'status' | 'reviewed' | 'human_review' | 'reviewers' | 'approvals'
 
 const PAGE_SIZE = 10
+const humanReviewRank: Record<PRInfo['human_review'], number> = {
+  changes_requested: 3,
+  waiting: 2,
+  approved: 1,
+  none: 0,
+}
 
 interface Props {
   prs: PRInfo[]
@@ -11,6 +17,19 @@ interface Props {
 
 function prKey(pr: PRInfo) {
   return `${pr.repo}#${pr.number}`
+}
+
+function humanReviewLabel(humanReview: PRInfo['human_review']) {
+  switch (humanReview) {
+    case 'changes_requested':
+      return 'Request Changes'
+    case 'waiting':
+      return 'Waiting Review'
+    case 'approved':
+      return 'Approved'
+    default:
+      return 'No Label'
+  }
 }
 
 export function PRTable({ prs }: Props) {
@@ -27,7 +46,7 @@ export function PRTable({ prs }: Props) {
       case 'created_at': cmp = a.created_at.localeCompare(b.created_at); break
       case 'status': cmp = a.status.localeCompare(b.status); break
       case 'reviewed': cmp = Number(a.reviewed) - Number(b.reviewed); break
-      case 'human_review': cmp = a.human_review.localeCompare(b.human_review); break
+      case 'human_review': cmp = humanReviewRank[a.human_review] - humanReviewRank[b.human_review]; break
       case 'reviewers': cmp = a.reviewers.join(',').localeCompare(b.reviewers.join(',')); break
       case 'approvals': cmp = a.approval_count - b.approval_count; break
     }
@@ -67,7 +86,7 @@ export function PRTable({ prs }: Props) {
               <th className="col-date" onClick={() => handleSort('created_at')}>Date{sortIndicator('created_at')}</th>
               <th className="col-pr-status" onClick={() => handleSort('status')}>PR Status{sortIndicator('status')}</th>
               <th className="col-status" onClick={() => handleSort('reviewed')}>AI Review{sortIndicator('reviewed')}</th>
-              <th className="col-status" onClick={() => handleSort('human_review')}>Human Review{sortIndicator('human_review')}</th>
+              <th className="col-status col-human-review" onClick={() => handleSort('human_review')}>Human Review{sortIndicator('human_review')}</th>
             </tr>
           </thead>
           <tbody>
@@ -111,9 +130,9 @@ export function PRTable({ prs }: Props) {
                     {pr.reviewed ? 'Reviewed' : 'Not Reviewed'}
                   </span>
                 </td>
-                <td className="col-status">
+                <td className="col-status col-human-review">
                   <span className={`badge badge-human-${pr.human_review}`}>
-                    {pr.human_review === 'waiting' ? 'Waiting Review' : pr.human_review === 'approved' ? 'Approved' : 'No Label'}
+                    {humanReviewLabel(pr.human_review)}
                   </span>
                 </td>
               </tr>
