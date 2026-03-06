@@ -1,5 +1,7 @@
 {
   "repos": [
-    "pixfy/kinebot-standard"
+    "pixfy/kinebot-standard",
+    "pixfy/kinebot-research",
+    "pixfy/kinebot-cosmos"
   ]
 }

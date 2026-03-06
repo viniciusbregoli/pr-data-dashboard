@@ -181,13 +181,20 @@ body {
 /* Filters */
 .filters {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 24px;
   padding: 16px 20px;
   background: var(--color-white);
   border-radius: 10px;
   border: 1px solid var(--color-border);
+}
+
+.filters-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .filter-group {
@@ -206,6 +213,7 @@ body {
 }
 
 .filter-group input[type="date"],
+.filter-group input[type="search"],
 .filter-group select {
   padding: 6px 10px;
   border: 1px solid var(--color-secondary);
@@ -218,8 +226,31 @@ body {
 }
 
 .filter-group input[type="date"]:focus,
+.filter-group input[type="search"]:focus,
 .filter-group select:focus {
   border-color: var(--color-primary);
+}
+
+.filter-group-search {
+  flex: 1 1 240px;
+  min-width: 320px;
+}
+
+.filter-group-search label {
+  flex: 0 0 auto;
+}
+
+.filter-group-search input[type="search"] {
+  flex: 1 1 auto;
+  min-width: 240px;
+}
+
+.filter-group-ignore {
+  margin-left: auto;
+}
+
+.filters-row-secondary .filter-group-ignore {
+  margin-left: auto;
 }
 
 .date-presets {
@@ -600,27 +631,36 @@ td.col-repo {
   margin-top: 12px;
 }
 
-.progress-bar {
-  width: 320px;
-  height: 6px;
+.loading-progress-header {
+  width: min(420px, 100%);
+  margin: 0 auto 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.loading-progress-track {
+  width: min(420px, 100%);
+  height: 10px;
   margin: 0 auto;
   background: var(--color-secondary);
-  border-radius: 3px;
+  border-radius: 999px;
   overflow: hidden;
 }
 
-.progress-bar-indeterminate {
-  width: 40%;
+.loading-progress-fill {
   height: 100%;
   background: var(--color-primary);
-  border-radius: 3px;
-  animation: indeterminate 1.4s ease-in-out infinite;
+  border-radius: 999px;
+  transition: width 0.3s ease;
 }
 
-@keyframes indeterminate {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(200%); }
-  100% { transform: translateX(-100%); }
+.loading-detail {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .error-banner {

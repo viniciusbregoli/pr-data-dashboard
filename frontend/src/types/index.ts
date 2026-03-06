@@ -28,6 +28,17 @@ export interface PRListResponse {
   stats: PRStats
 }
 
+export interface PRLoadProgressResponse {
+  status: 'idle' | 'running' | 'complete' | 'error'
+  message: string
+  progress_percent: number
+  total_repos: number
+  completed_repos: number
+  total_prs: number
+  completed_prs: number
+  current_repo: string | null
+}
+
 export interface RepoListResponse {
   repos: string[]
 }

@@ -1,4 +1,4 @@
-import type { PRListResponse, RepoListResponse, AuthorListResponse } from '../types'
+import type { PRListResponse, RepoListResponse, AuthorListResponse, PRLoadProgressResponse } from '../types'
 
 const BASE = '/api'
 const TOKEN_STORAGE_KEY = 'pr-review-tracker.github-token'
@@ -65,6 +65,24 @@ export function getPRs(params: {
   if (params.status) qs.set('status', params.status)
   if (params.showIgnored) qs.set('show_ignored', 'true')
   return fetchJson(`${BASE}/prs?${qs}`, undefined, tokenOverride)
+}
+
+export function getPRLoadProgress(params: {
+  since: string
+  until: string
+  repo?: string
+  author?: string
+  status?: string
+  showIgnored?: boolean
+}, tokenOverride?: string): Promise<PRLoadProgressResponse> {
+  const qs = new URLSearchParams()
+  qs.set('since', params.since)
+  qs.set('until', params.until)
+  if (params.repo) qs.set('repo', params.repo)
+  if (params.author) qs.set('author', params.author)
+  if (params.status) qs.set('status', params.status)
+  if (params.showIgnored) qs.set('show_ignored', 'true')
+  return fetchJson(`${BASE}/prs/progress?${qs}`, undefined, tokenOverride)
 }
 
 export function getRepos(tokenOverride?: string): Promise<RepoListResponse> {

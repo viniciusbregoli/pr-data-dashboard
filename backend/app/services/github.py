@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 
 import httpx
@@ -224,7 +225,12 @@ class GitHubService:
         _reviewers_cache[cache_key] = result
         return result
 
-    async def enrich_prs(self, repo: str, prs: list[dict]) -> list[dict]:
+    async def enrich_prs(
+        self,
+        repo: str,
+        prs: list[dict],
+        on_pr_processed: Callable[[dict], Awaitable[None]] | None = None,
+    ) -> list[dict]:
         """Check AI review status and fetch reviewers for all PRs concurrently."""
         sem = asyncio.Semaphore(10)
 
@@ -260,6 +266,8 @@ class GitHubService:
                     for u in details["changes_requested_by"]
                     if u.lower() != author_lower and u.lower() not in requested_lower
                 ]
+                if on_pr_processed is not None:
+                    await on_pr_processed(pr)
                 return pr
 
         return await asyncio.gather(*[check(pr) for pr in prs])

@@ -33,6 +33,17 @@ class PRListResponse(BaseModel):
     stats: PRStats
 
 
+class PRLoadProgressResponse(BaseModel):
+    status: str  # "idle", "running", "complete", "error"
+    message: str
+    progress_percent: float
+    total_repos: int
+    completed_repos: int
+    total_prs: int
+    completed_prs: int
+    current_repo: str | None = None
+
+
 class RepoListResponse(BaseModel):
     repos: list[str]
 
