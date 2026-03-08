@@ -12,6 +12,7 @@ export interface PRInfo {
   approved_by: string[]
   changes_requested_by: string[]
   approval_count: number
+  incomplete_template: boolean
 }
 
 export interface PRStats {

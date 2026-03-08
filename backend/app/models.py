@@ -17,6 +17,7 @@ class PRInfo(BaseModel):
     approved_by: list[str]
     changes_requested_by: list[str]
     approval_count: int
+    incomplete_template: bool
 
 
 class PRStats(BaseModel):

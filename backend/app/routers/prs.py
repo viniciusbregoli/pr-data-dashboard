@@ -318,6 +318,7 @@ async def list_prs(
                         approved_by=pr["_approved_by"],
                         changes_requested_by=pr.get("_changes_requested_by", []),
                         approval_count=len(pr["_approved_by"]),
+                        incomplete_template="incomplete-template" in [l["name"].lower() for l in pr.get("labels", [])],
                     )
                 )
             completed_repos = index

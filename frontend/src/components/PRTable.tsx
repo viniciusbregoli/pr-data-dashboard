@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { PRInfo } from '../types'
 
-type SortKey = 'repo' | 'title' | 'author' | 'created_at' | 'status' | 'reviewed' | 'human_review' | 'reviewers' | 'approvals'
+type SortKey = 'repo' | 'title' | 'author' | 'created_at' | 'status' | 'reviewed' | 'human_review' | 'reviewers' | 'approvals' | 'incomplete_template'
 
 const PAGE_SIZE = 10
 const humanReviewRank: Record<PRInfo['human_review'], number> = {
@@ -49,6 +49,7 @@ export function PRTable({ prs }: Props) {
       case 'human_review': cmp = humanReviewRank[a.human_review] - humanReviewRank[b.human_review]; break
       case 'reviewers': cmp = a.reviewers.join(',').localeCompare(b.reviewers.join(',')); break
       case 'approvals': cmp = a.approval_count - b.approval_count; break
+      case 'incomplete_template': cmp = Number(a.incomplete_template) - Number(b.incomplete_template); break
     }
     return sortAsc ? cmp : -cmp
   })
@@ -85,6 +86,7 @@ export function PRTable({ prs }: Props) {
               <th className="col-approvals" onClick={() => handleSort('approvals')}>Approvals{sortIndicator('approvals')}</th>
               <th className="col-date" onClick={() => handleSort('created_at')}>Date{sortIndicator('created_at')}</th>
               <th className="col-pr-status" onClick={() => handleSort('status')}>PR Status{sortIndicator('status')}</th>
+              <th className="col-incomplete" onClick={() => handleSort('incomplete_template')}>Template{sortIndicator('incomplete_template')}</th>
               <th className="col-status" onClick={() => handleSort('reviewed')}>AI Review{sortIndicator('reviewed')}</th>
               <th className="col-status col-human-review" onClick={() => handleSort('human_review')}>Human Review{sortIndicator('human_review')}</th>
             </tr>
@@ -123,6 +125,11 @@ export function PRTable({ prs }: Props) {
                 <td className="col-pr-status">
                   <span className={`badge badge-${pr.status}`}>
                     {pr.status.charAt(0).toUpperCase() + pr.status.slice(1)}
+                  </span>
+                </td>
+                <td className="col-incomplete">
+                  <span className={`badge ${pr.incomplete_template ? 'badge-not-reviewed' : 'badge-reviewed'}`}>
+                    {pr.incomplete_template ? 'Incomplete' : 'OK'}
                   </span>
                 </td>
                 <td className="col-status">

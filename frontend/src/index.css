@@ -464,8 +464,12 @@ tr.row-selected {
 }
 
 .col-human-review {
-  width: 12%;
+  width: 11%;
   padding-right: 24px;
+}
+
+.col-incomplete {
+  width: 8%;
 }
 
 .col-title a {
@@ -542,7 +546,7 @@ tr.row-selected {
 }
 
 .col-title {
-  width: 20%;
+  width: 19%;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
