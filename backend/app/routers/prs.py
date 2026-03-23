@@ -229,7 +229,7 @@ async def list_prs(
                 completed_prs=completed_prs,
                 current_repo=r,
             )
-            raw_prs = await github.get_prs(r, since_dt, until_dt, author=author)
+            raw_prs = await github.get_prs(r, since_dt, until_dt, author=author, status=status)
             total_prs += len(raw_prs)
             repo_prs.append((r, raw_prs))
             _set_progress(

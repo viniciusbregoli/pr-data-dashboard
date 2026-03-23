@@ -7,6 +7,7 @@ import { PRTable } from './PRTable'
 import { RepoFilter } from './RepoFilter'
 import { SearchFilter } from './SearchFilter'
 import { StatsBar } from './StatsBar'
+import { ReviewerQueue } from './ReviewerQueue'
 import { ReviewerFilter } from './ReviewerFilter'
 import { StatusFilter } from './StatusFilter'
 import type { PRInfo } from '../types'
@@ -46,7 +47,7 @@ interface Props {
 export function Dashboard({ onResetToken }: Props) {
   const [since, setSince] = useState(defaultSince)
   const [until, setUntil] = useState(defaultUntil)
-  const [repo, setRepo] = useState('')
+  const [repo, setRepo] = useState('pixfy/kinebot-standard')
   const [author, setAuthor] = useState('')
   const [status, setStatus] = useState('open')
   const [reviewer, setReviewer] = useState('')
@@ -139,6 +140,11 @@ export function Dashboard({ onResetToken }: Props) {
             })
             return (
               <>
+                <ReviewerQueue
+                  prs={data.prs.filter((pr) => matchesSearch(pr, deferredSearch))}
+                  selectedReviewer={reviewer}
+                  onSelectReviewer={setReviewer}
+                />
                 <StatsBar prs={filtered} />
                 <PRTable prs={filtered} />
               </>

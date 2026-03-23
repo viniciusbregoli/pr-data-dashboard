@@ -7,10 +7,11 @@ interface Props {
 export function StatsBar({ prs }: Props) {
   const total = prs.length
   const reviewed = prs.filter((p) => p.reviewed).length
-  const notReviewed = total - reviewed
   const reviewedPercent = total > 0 ? Math.round((reviewed / total) * 1000) / 10 : 0
   const with2Approvals = prs.filter((p) => p.approval_count >= 2).length
   const approvalPercent = total > 0 ? Math.round((with2Approvals / total) * 1000) / 10 : 0
+  const templateOk = prs.filter((p) => !p.incomplete_template).length
+  const templateOkPercent = total > 0 ? Math.round((templateOk / total) * 1000) / 10 : 0
 
   return (
     <div className="stats-bar">
@@ -23,13 +24,13 @@ export function StatsBar({ prs }: Props) {
           <span className="stat-value">{reviewed}</span>
           <span className="stat-label">AI Reviewed</span>
         </div>
-        <div className="stat-card stat-not-reviewed">
-          <span className="stat-value">{notReviewed}</span>
-          <span className="stat-label">Not Reviewed</span>
-        </div>
         <div className={`stat-card ${with2Approvals === total && total > 0 ? 'stat-reviewed' : 'stat-approvals'}`}>
           <span className="stat-value">{with2Approvals}</span>
           <span className="stat-label">2+ Approvals</span>
+        </div>
+        <div className={`stat-card ${templateOk === total && total > 0 ? 'stat-reviewed' : 'stat-template'}`}>
+          <span className="stat-value">{templateOk}</span>
+          <span className="stat-label">Template OK</span>
         </div>
       </div>
 
@@ -47,6 +48,13 @@ export function StatsBar({ prs }: Props) {
             <div className="progress-fill progress-fill-approval" style={{ width: `${approvalPercent}%` }} />
           </div>
           <span className="progress-label">{approvalPercent}%</span>
+        </div>
+        <div className="progress-container">
+          <span className="progress-title">Template OK</span>
+          <div className="progress-bar">
+            <div className="progress-fill progress-fill-template" style={{ width: `${templateOkPercent}%` }} />
+          </div>
+          <span className="progress-label">{templateOkPercent}%</span>
         </div>
       </div>
     </div>

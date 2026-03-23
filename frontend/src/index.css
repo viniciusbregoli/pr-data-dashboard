@@ -281,6 +281,78 @@ body {
   color: var(--color-white);
 }
 
+/* Reviewer Queue */
+.reviewer-queue {
+  margin-bottom: 24px;
+  background: var(--color-white);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.reviewer-queue-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+}
+
+.reviewer-queue-toggle:hover {
+  color: var(--color-primary);
+}
+
+.reviewer-queue-chevron {
+  font-size: 0.65rem;
+}
+
+.reviewer-queue-collapsible {
+  overflow: hidden;
+  transition: height 0.25s ease;
+}
+
+.reviewer-queue-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.reviewer-queue-card {
+  flex: 1 1 100px;
+  min-width: 100px;
+  cursor: pointer;
+  transition: outline 0.15s, background 0.15s;
+  outline: 2px solid transparent;
+}
+
+.reviewer-queue-card:hover {
+  outline: 2px solid var(--color-primary);
+}
+
+.reviewer-queue-card-selected {
+  outline: 2px solid var(--color-primary);
+  background: #eef2ff;
+}
+
+.reviewer-queue-card .stat-value {
+  color: var(--color-primary);
+}
+
+.reviewer-queue-card-done .stat-value {
+  color: var(--color-text-muted);
+}
+
 /* Stats bar */
 .stats-bar {
   margin-bottom: 24px;
@@ -364,18 +436,29 @@ body {
 }
 
 .progress-label {
+  width: 4.5rem;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-primary);
+  text-align: right;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .progress-fill-approval {
   background: #7c3aed;
 }
 
+.progress-fill-template {
+  background: #0f766e;
+}
+
 .stat-card.stat-approvals .stat-value {
   color: #7c3aed;
+}
+
+.stat-card.stat-template .stat-value {
+  color: #0f766e;
 }
 
 .selection-hint {

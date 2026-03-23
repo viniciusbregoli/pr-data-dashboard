@@ -80,10 +80,18 @@ class GitHubService:
         since: datetime,
         until: datetime,
         author: str | None = None,
+        status: str | None = None,
     ) -> list[dict]:
-        """Fetch closed + open PRs for a repo within a date range."""
+        """Fetch PRs for a repo within a date range, optionally filtered by status."""
+        if status == "open":
+            states = ("open",)
+        elif status in ("closed", "merged"):
+            states = ("closed",)
+        else:
+            states = ("open", "closed")
+
         all_prs = []
-        for state in ("open", "closed"):
+        for state in states:
             prs = await self._fetch_prs(repo, state, since, until)
             all_prs.extend(prs)
 
